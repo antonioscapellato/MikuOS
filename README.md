@@ -1,4 +1,4 @@
-# MikuOS - The Next Generation AI Assistant
+# MikuOS - Opensouce Personal AI Agent
 
 MikuOS is an open-source AI assistant that aims to revolutionize how we interact with artificial intelligence. Currently serving as a powerful alternative to ChatGPT and Perplexity, MikuOS is on its way to becoming the first truly personal AI agent.
 
