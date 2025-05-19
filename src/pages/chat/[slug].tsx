@@ -6,9 +6,6 @@ import { useDomainPreferences } from '../../context/DomainPreferencesContext';
 //HeroUI
 import { Button, Link } from '@heroui/react';
 
-//Posthog
-import { usePostHog } from 'posthog-js/react';
-
 //Components
 //Auth
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
@@ -17,7 +14,6 @@ import ProtectedRoute from '../../components/auth/ProtectedRoute';
 import { ChatContent } from '../../components/chat/ChatContent';
 import ChatInput from '../../components/chat/ChatInput';
 import ChatFollowup from '../../components/chat/ChatFollowup';
-import LimitDialog from '../../components/dialog/LimitDialog';
 
 //Types
 import { Message, Action } from '../../types/chat';
@@ -59,7 +55,6 @@ export default function Chat() {
   const [actions, setActions] = useState<Action[]>([]);
   const [currentAction, setCurrentAction] = useState<StatusType>('idle');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const posthog = usePostHog();
 
   const [initialQuery, setInitialQuery] = useState<string>('');
 
@@ -150,12 +145,8 @@ export default function Chat() {
     if (questionCount >= 10) {
       setIsLimitReached(true);
       setShowLimitDialog(true);
-      posthog?.capture('limit_reached', {
-        question_count: questionCount,
-        timestamp: new Date().toISOString()
-      });
     }
-  }, [posthog]);
+  }, []);
 
   // Save chat history to localStorage whenever messages change
   useEffect(() => {
@@ -208,11 +199,6 @@ export default function Chat() {
 
   // Update search history with new terms
   const handleSubmit = async (message: string, forceWebSearch: boolean = false, files?: File[]) => {
-    if (isLimitReached) {
-      setShowLimitDialog(true);
-      return;
-    }
-    
     // Clear the initial query after first submission
     if (initialQuery) {
       setInitialQuery('');
@@ -385,12 +371,6 @@ export default function Chat() {
         }
       }
 
-      // Track successful response
-      posthog?.capture('message', {
-        type: 'response',
-        success: true
-      });
-      
       // Increment question count
       const newCount = parseInt(localStorage.getItem('questionCount') || '0', 10) + 1;
       localStorage.setItem('questionCount', newCount.toString());
@@ -398,10 +378,6 @@ export default function Chat() {
       if (newCount >= 10) {
         setIsLimitReached(true);
         setShowLimitDialog(true);
-        posthog?.capture('limit_reached', {
-          question_count: newCount,
-          timestamp: new Date().toISOString()
-        });
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -409,13 +385,6 @@ export default function Chat() {
         role: 'assistant',
         content: 'Sorry, there was an error processing your request.'
       }]);
-      
-      // Track error
-      posthog?.capture('message', {
-        type: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        question_count: parseInt(localStorage.getItem('questionCount') || '0', 10) + 1
-      });
     } finally {
       setIsLoading(false);
       setStatus('idle');
@@ -449,16 +418,12 @@ export default function Chat() {
           <div className="max-w-4xl mx-auto px-4">
             <ChatInput
               onSubmit={handleSubmit}
-              disabled={isLoading || isLimitReached}
+              disabled={isLoading}
               messages={messages}
               initialValue={initialQuery}
             />
           </div>
         </div>
-        <LimitDialog
-          isOpen={showLimitDialog}
-          onClose={() => setShowLimitDialog(false)}
-        />
       </main>
     </ProtectedRoute>
   );

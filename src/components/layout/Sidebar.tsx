@@ -10,7 +10,6 @@ import { useAuth } from '../auth/AuthProvider';
 import { useAuthModal } from '../../context/AuthModalContext';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { Message } from '../../types/chat';
-import FeedbackButton from '../basic/FeedbackButton';
 import { ThemeSwitcher } from '../basic/ThemeSwitcher';
 
 interface Chat {
@@ -185,11 +184,6 @@ export default function Sidebar() {
                     {item.name}
                   </Button>
                 ))}
-              </nav>
-
-              {/* FeedbackButton */}
-              <nav className="px-2 space-y-2">
-                <FeedbackButton />
               </nav>
 
               {/* Chat List */}

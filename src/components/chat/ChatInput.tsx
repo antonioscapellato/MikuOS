@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { LuSend } from 'react-icons/lu';
 import { LuSearch } from 'react-icons/lu';
 import { LuPaperclip } from 'react-icons/lu';
-import { usePostHog } from 'posthog-js/react';
 
 interface ChatInputProps {
   onSubmit: (message: string, forceWebSearch?: boolean, files?: File[]) => void;
@@ -47,7 +46,6 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
   const [message, setMessage] = useState(initialValue);
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const posthog = usePostHog();
 
   // Function to detect if message should trigger search
   const shouldTriggerSearch = (text: string): boolean => {
@@ -79,19 +77,12 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
     }
   }, [initialValue]);
 
-  const handleSubmit = () => {
-    if (message.trim() || selectedFiles.length > 0) {
-      // Capture message send event
-      posthog?.capture('message', {
-        type: 'send',
-        content_length: message.trim().length,
-        search_enabled: searchEnabled,
-        files_count: selectedFiles.length
-      });
-      onSubmit(message, searchEnabled, selectedFiles);
-      setMessage('');
-      setSelectedFiles([]);
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim() || disabled) return;
+
+    onSubmit(message);
+    setMessage('');
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,13 +95,6 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
   };
 
   const handleSuggestionClick = (query: string) => {
-    // Capture suggested query send event
-    posthog?.capture('message', {
-      type: 'send',
-      content_length: query.length,
-      search_enabled: searchEnabled,
-      is_suggestion: true
-    });
     onSubmit(query, searchEnabled);
   };
 
@@ -135,10 +119,7 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
         </div>
       )}
       <form 
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }} 
+        onSubmit={handleSubmit} 
         className="relative"
       >
         <div className="relative flex flex-col gap-2">
@@ -170,7 +151,7 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmit();
+                handleSubmit(e);
               }
             }}
             endContent={

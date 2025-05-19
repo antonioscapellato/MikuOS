@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { AuthError } from '@supabase/supabase-js';
-import posthog from 'posthog-js';
 import { Button, Image, Input } from '@heroui/react';
 import { FaGoogle } from 'react-icons/fa';
+import { useRouter } from 'next/router';
 
 type AuthMode = 'signin' | 'signup';
 
@@ -21,6 +21,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const router = useRouter();
 
   // Get the current site URL for redirects
   const getRedirectURL = () => {
@@ -45,94 +46,56 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
     }
   }, [error, success]);
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       if (mode === 'signup') {
-        const { error: signUpError, data } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: getRedirectURL(),
           },
         });
-        if (signUpError) throw signUpError;
-        
-        if (data.user) {
-          posthog.identify(data.user.id, {
-            email: data.user.email,
-            signup_date: new Date().toISOString(),
-            auth_method: 'email'
-          });
-          posthog.capture('user_signed_up', {
-            auth_method: 'email',
-            email_confirmed: false
-          });
-          onSuccess?.();
+        if (error) throw error;
+        if (data?.user) {
+          router.push('/profile');
         }
       } else {
-        const { error: signInError, data } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (signInError) throw signInError;
-        
-        if (data.user) {
-          posthog.identify(data.user.id, {
-            email: data.user.email,
-            last_login: new Date().toISOString(),
-            auth_method: 'email'
-          });
-          posthog.capture('user_signed_in', {
-            auth_method: 'email'
-          });
-          onSuccess?.();
+        if (error) throw error;
+        if (data?.user) {
+          router.push('/profile');
         }
       }
-    } catch (err) {
-      const authError = err as AuthError;
-      setError(authError.message);
-      posthog.capture('auth_error', {
-        error: authError.message,
-        auth_method: 'email',
-        mode: mode
-      });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleOAuthSignIn = async (provider: 'google' | 'github') => {
+    setError('');
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
         options: {
           redirectTo: getRedirectURL(),
         },
       });
-      
       if (error) throw error;
-
-      // Since this is OAuth, we'll identify the user after the redirect
-      posthog.capture('oauth_initiated', {
-        auth_method: 'google'
-      });
-      // Don't call onSuccess here as we'll handle the redirect in the AuthModal
-    } catch (err) {
-      const authError = err as AuthError;
-      setError(authError.message);
-      posthog.capture('auth_error', {
-        error: authError.message,
-        auth_method: 'google'
-      });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred');
+    } finally {
       setLoading(false);
     }
   };
@@ -173,7 +136,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
             </p>
           </div>
 
-          <form onSubmit={handleEmailAuth} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
                 <Input
@@ -222,7 +185,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
             </div>
 
             <Button
-              onPress={handleGoogleSignIn}
+              onPress={() => handleOAuthSignIn('google')}
               disabled={loading}
               isLoading={loading}
               className="bg-transparent py-6 w-full text-default-900 border border-default-400"

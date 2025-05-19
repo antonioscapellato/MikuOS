@@ -12,9 +12,6 @@ import { Tabs, Tab, Link, addToast, Button, Textarea, Chip, Image } from "@herou
 // Components
 import ChatImageVisualizer from './ChatImageVisualizer';
 
-// PostHog
-import { usePostHog } from 'posthog-js/react';
-
 // Icons
 import { AiOutlineGlobal, AiOutlineMore, AiOutlineEdit, AiOutlineDelete, AiOutlineCopy, AiOutlineCheck, AiOutlineClose, AiOutlinePicture, AiOutlineLike, AiOutlineDislike } from 'react-icons/ai';
 import { IoCopyOutline } from "react-icons/io5";
@@ -40,7 +37,6 @@ export const ChatContent: React.FC<ChatContentProps> = ({
   onEditMessage = () => {},
   onDeleteMessage = () => {}
 }) => {
-  const posthog = usePostHog();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
@@ -51,28 +47,15 @@ export const ChatContent: React.FC<ChatContentProps> = ({
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    // Capture message copy event
-    posthog?.capture('message', {
-      type: 'copy',
-      content_length: text.length
-    });
   };
 
   const startEditing = (index: number, content: string) => {
     setEditingIndex(index);
     setEditText(content);
-    // We don't capture an event here as this is just starting the edit process
-    // The actual edit event will be captured when the edit is saved
   };
 
   const saveEdit = (index: number) => {
     if (editText.trim()) {
-      // Capture message edit event
-      posthog?.capture('message', {
-        type: 'edit',
-        message_id: index,
-        content_length: editText.trim().length
-      });
       onEditMessage(index, editText);
       setEditingIndex(null);
     }
@@ -83,11 +66,6 @@ export const ChatContent: React.FC<ChatContentProps> = ({
   };
 
   const handleDelete = (index: number) => {
-    // Capture message delete event
-    posthog?.capture('message', {
-      type: 'delete',
-      message_id: index
-    });
     onDeleteMessage(index);
   };
 
@@ -99,7 +77,6 @@ export const ChatContent: React.FC<ChatContentProps> = ({
 
   const handleImageVisualizerChange = (isOpen: boolean) => {
     setIsImageVisualizerOpen(isOpen);
-    // Clear the selected image after a short delay when closing
     if (!isOpen) {
       setTimeout(() => {
         setSelectedImage(null);
@@ -109,31 +86,18 @@ export const ChatContent: React.FC<ChatContentProps> = ({
   };
 
   const handleRateMessage = (messageIndex: number, rating: number) => {
-    // Prevent rating the same message multiple times with different ratings
     if (ratedMessages[messageIndex] !== undefined && ratedMessages[messageIndex] !== rating) {
-      // If changing from one rating to another, capture the event
-      posthog?.capture('message', {
-        type: 'rating',
-        value: rating,
-        message_id: messageIndex,
-        previous_rating: ratedMessages[messageIndex]
-      });
+      setRatedMessages(prev => ({
+        ...prev,
+        [messageIndex]: rating
+      }));
     } else if (ratedMessages[messageIndex] === undefined) {
-      // Only capture if not previously rated
-      posthog?.capture('message', {
-        type: 'rating',
-        value: rating,
-        message_id: messageIndex
-      });
+      setRatedMessages(prev => ({
+        ...prev,
+        [messageIndex]: rating
+      }));
     }
     
-    // Update the rated messages state
-    setRatedMessages(prev => ({
-      ...prev,
-      [messageIndex]: rating
-    }));
-    
-    // Show feedback toast
     addToast({
       title: rating === 1 ? "Thanks for the positive feedback!" : "Thanks for your feedback",
       description: rating === 1 ? "We're glad this response was helpful." : "We'll use this to improve future responses.",
@@ -141,15 +105,19 @@ export const ChatContent: React.FC<ChatContentProps> = ({
     });
   };
 
-  // Scroll to bottom when new messages are added or when loading state changes
+  const handleEditMessage = (index: number, newContent: string) => {
+    onEditMessage(index, newContent);
+  };
+
+  const handleDeleteMessage = (index: number) => {
+    onDeleteMessage(index);
+  };
+
   React.useEffect(() => {
-    // Only auto-scroll if we're at or near the bottom already
-    // This prevents auto-scrolling when user is viewing previous messages
     const scrollToBottom = () => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
     
-    // Small delay to ensure DOM has updated
     setTimeout(scrollToBottom, 100);
   }, [messages, isLoading, actions]);
 

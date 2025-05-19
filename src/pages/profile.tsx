@@ -3,7 +3,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import { useAuth } from '../components/auth/AuthProvider';
-import posthog from 'posthog-js';
 import { Button } from '@heroui/react';
 
 export default function Profile() {
@@ -28,16 +27,8 @@ export default function Profile() {
   }, [user]);
 
   const handleSignOut = async () => {
-    try {
-      setLoading(true);
-      posthog.capture('user_signed_out');
-      await signOut();
-      router.push('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    } finally {
-      setLoading(false);
-    }
+    await signOut();
+    router.push('/');
   };
 
   return (
