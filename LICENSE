@@ -1,0 +1,43 @@
+Business Source License 1.1
+
+Licensor: MikuOS Project
+
+Licensed Work: MikuOS (the "Software")
+
+The Licensed Work is the software code, documentation, and related materials contained in this repository.
+
+Licensor provides the Licensed Work to the public under the terms of this Business Source License version 1.1, as follows:
+
+Use Limitation: The Licensed Work may not be used in a production environment by any commercial organization, business, or for any commercial purpose without purchasing a separate commercial license from the Licensor.
+
+Change Date: January 1, 2028
+
+Change License: After the Change Date, the Licensed Work will be made available under the open source license: Apache License 2.0.
+
+Grant of Rights:
+
+Effective on the date the Licensed Work is first publicly released by the Licensor under the terms of this License, and subject to the Use Limitation and the other conditions in this License, the Licensor hereby grants you the following rights:
+
+- You may use, copy, modify, and distribute the Licensed Work, in source or object form, for non-commercial use only, subject to the Use Limitation above.
+
+- You may create derivative works of the Licensed Work for non-commercial use only.
+
+Conditions:
+
+- You must include this License file with any distribution of the Licensed Work or derivative works.
+- You must preserve all copyright notices and attribution.
+- You must not remove or obscure any features, disclaimers, or notices in the Licensed Work.
+- Any use for commercial purposes requires a separate commercial license.
+
+Commercial Licensing:
+
+For commercial use, including use by companies or for profit-generating purposes, you must contact the Licensor to obtain a separate commercial license. Please contact: [your-email@example.com]
+
+Disclaimer:
+
+THE LICENSED WORK IS PROVIDED “AS IS.” THE LICENSOR HEREBY DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+This License does not grant you any right in any trademark or logo of the Licensor.
+
+For more details on the Business Source License, visit: https://mariadb.com/bsl11
+
