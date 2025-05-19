@@ -86,8 +86,8 @@ See the [LICENSE](./LICENSE) file for full details.
 
 ## 🌐 Community
 
-- [Reddit] (https://www.reddit.com/r/mikuos/)
-- [Linkedin] (https://www.linkedin.com/company/miku-os/)
+- [Reddit](https://www.reddit.com/r/mikuos/)
+- [Linkedin](https://www.linkedin.com/company/miku-os/)
 
 ---
 
