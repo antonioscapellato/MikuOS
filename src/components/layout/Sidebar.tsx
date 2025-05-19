@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Avatar, Button } from '@heroui/react';
+import { Avatar, Button, Link } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FiBookmark, FiUser, FiLogOut, FiEdit3, FiTrash2, FiMoreHorizontal, FiX,
-} from 'react-icons/fi';
+import { FiBookmark, FiUser, FiLogOut, FiEdit3, FiTrash2, FiMoreHorizontal, FiX } from 'react-icons/fi';
 import { TbLayoutSidebarLeftExpand, TbLayoutSidebarRightCollapse, TbLayoutSidebarRightExpand } from 'react-icons/tb';
 import { LuSearch, LuSettings2, LuTrash2, LuUserRound } from 'react-icons/lu';
+import { FaGithub, FaReddit, FaDiscord } from 'react-icons/fa';
 import { useAuth } from '../auth/AuthProvider';
 import { useAuthModal } from '../../context/AuthModalContext';
-import {
-  Dropdown, DropdownTrigger, DropdownMenu, DropdownItem,
-} from "@heroui/dropdown";
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { Message } from '../../types/chat';
 import FeedbackButton from '../basic/FeedbackButton';
 import { ThemeSwitcher } from '../basic/ThemeSwitcher';
@@ -238,6 +235,45 @@ export default function Sidebar() {
                       </div>
                     </Button>
                   ))}
+                </div>
+              </div>
+
+              {/* Social Links */}
+              <div className="mt-auto px-2 py-4">
+                <div className="flex justify-center space-x-4">
+                  <Button
+                    as={Link}
+                    isIconOnly
+                    size="lg"
+                    className="bg-transparent"
+                    isExternal
+                    href={"https://miku.so/github"}
+                    aria-label="GitHub"
+                  >
+                    <FaGithub className="text-default-300" size={28} />
+                  </Button>
+                  <Button
+                    as={Link}
+                    isIconOnly
+                    size="lg"
+                    className="bg-transparent"
+                    isExternal
+                    href={"https://miku.so/reddit"}
+                    aria-label="Reddit"
+                  >
+                    <FaReddit className="text-default-300" size={28} />
+                  </Button>
+                  <Button
+                    as={Link}
+                    isIconOnly
+                    size="lg"
+                    className="bg-transparent"
+                    isExternal
+                    href={"https://miku.so/discord"}
+                    aria-label="Discord"
+                  >
+                    <FaDiscord className="text-default-300" size={28} />
+                  </Button>
                 </div>
               </div>
             </div>
