@@ -74,7 +74,15 @@ To run MikuOS locally:
 
 We welcome contributions from the community! Whether you're a developer, designer, or AI enthusiast, there are many ways to get involved.
 
-[Contribution guidelines coming soon]
+Please read our [Contributing Guidelines](CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to MikuOS.
+
+Some ways you can contribute:
+- 🐛 Report bugs and issues
+- 💡 Suggest new features
+- 🛠️ Submit pull requests
+- 📚 Improve documentation
+- 🧪 Add tests
+- 🔍 Review pull requests
 
 ## License
 
