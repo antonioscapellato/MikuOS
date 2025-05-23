@@ -1,16 +1,27 @@
+// NextJS
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+
+// HeroUI
 import { Avatar, Button, Link } from '@heroui/react';
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
+
+// Framer
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Auth
+import { useAuth } from '../auth/AuthProvider';
+import { useAuthModal } from '../../context/AuthModalContext';
+
+// Utils
+import { Message } from '../../types/chat';
+import { ThemeSwitcher } from '../basic/ThemeSwitcher';
+
+// Icons
 import { FiBookmark, FiUser, FiLogOut, FiEdit3, FiTrash2, FiMoreHorizontal, FiX } from 'react-icons/fi';
 import { TbLayoutSidebarLeftExpand, TbLayoutSidebarRightCollapse, TbLayoutSidebarRightExpand } from 'react-icons/tb';
 import { LuSearch, LuSettings2, LuTrash2, LuUserRound } from 'react-icons/lu';
 import { FaGithub, FaReddit, FaDiscord } from 'react-icons/fa';
-import { useAuth } from '../auth/AuthProvider';
-import { useAuthModal } from '../../context/AuthModalContext';
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
-import { Message } from '../../types/chat';
-import { ThemeSwitcher } from '../basic/ThemeSwitcher';
 
 interface Chat {
   id: string;

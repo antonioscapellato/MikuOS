@@ -9,8 +9,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const router = useRouter();
 
   useEffect(() => {
-    if (session?.user) {
-      router.push('/profile');
+    if (!session) {
+      router.push('/');  // Redirect to home/login page if not authenticated
     }
   }, [session, router]);
 

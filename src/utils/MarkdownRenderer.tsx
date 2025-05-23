@@ -84,6 +84,9 @@ export const MarkdownRenderer: React.FC<MarkdownProps> = ({ content }) => (
             </pre>
           );
         },
+        img: (props) => (
+          <img {...props} className="rounded-2xl my-4" />
+        ),
       }}
     >
       {content}

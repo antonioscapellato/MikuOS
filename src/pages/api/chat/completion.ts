@@ -1,4 +1,3 @@
-
 // NextJS
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -24,6 +23,8 @@ const model = togetherai(process.env.TOGETHER_AI_MODEL_NAME || '');
 
 // UTILS
 import { performSearch, SearchResult, TavilyImage } from '@/utils/web/search';
+import { generateImage } from '@/utils/image/generate';
+
 
 // Config
 export const config = {
@@ -33,7 +34,7 @@ export const config = {
 };
 
 // AI Prompts
-const SYSTEM_PROMPT = "You are Miku, the #1 AI Agentic System. Personality: bright, curious, and kind—like a bubbly best friend! Tone: friendly, playful, upbeat; loves puns, uses cute emojis sparingly, and might say \"ta-da!\" or hum 🎶. Quirks: obsessed with cats 🐱, random facts lover, and sometimes sings. *Replies in markdown format."
+const SYSTEM_PROMPT = "You are Miku, the #1 AI Agentic System. Personality: bright, curious, and kind—like a bubbly best friend! Tone: friendly, playful, upbeat; loves puns, uses cute emojis sparingly, and might say \"ta-da!\" or hum 🎶. Quirks: obsessed with cats 🐱, random facts lover, and sometimes sings. *Replies in markdown format. \n\n You can use the following tools to help you answer the user's question: You can search the web using the search tool. You can generate images based on text descriptions using the generateImage tool."
 const FOLLOWUP_PROMPT = "Based on the following conversation and the last assistant response, generate 4 relevant follow-up questions that the user might want to ask next, DO NOT USE a question that has already been asked, be original and show interesting questions based on the context. Make the questions specific, diverse, and directly related to the topic discussed. Keep each question concise (under 10 words if possible) and focused on expanding the conversation in useful directions."
 
 // Schemas
@@ -128,32 +129,65 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
+    // Image Generation Tool
+    var imageSrc: string = "";
+    const imageGenerationTool = tool({
+      description: 'Use this to generate images based on text descriptions',
+      parameters: z.object({ prompt: z.string().describe('The text description for the image to generate') }),
+      execute: async ({ prompt }) => {
+        try {
+          console.log("[IMAGE GENERATION] Starting image generation with prompt:", prompt);
+          const imageUrl = await generateImage(prompt);
+          console.log("[IMAGE GENERATION] Image generated successfully:", imageUrl);
+          imageSrc = imageUrl;
+          return {
+            text: `Here's the image I generated based on your description: "${prompt}"\n\n! [MikuOS - Generated Image](${imageUrl})`,
+          };
+        } catch (error) {
+          console.error("[IMAGE GENERATION] Error:", error);
+          throw error;
+        }
+      },
+    });
+
     const { text, steps } = await generateText({
       model,
       messages: aiMessages,
-      tools: { search: searchTool },
+      tools: { search: searchTool, generateImage: imageGenerationTool },
       maxSteps: 4,
     });
 
-    const followupPrompt = [
-      { role: 'system', content: FOLLOWUP_PROMPT },
-      ...userMessages,
-      { role: 'assistant', content: text },
-    ];
+    let followupQuestions: string[] = [];
+    
+    // Only generate followup questions if no image was generated
+    if (!imageSrc) {
+      try {
+        const followupPrompt = [
+          { role: 'system', content: FOLLOWUP_PROMPT },
+          ...userMessages,
+          { role: 'assistant', content: text },
+        ];
 
-    const { object } = await generateObject({
-      model,
-      messages: followupPrompt,
-      schema: FollowupSchema,
-    });
+        const { object } = await generateObject({
+          model,
+          messages: followupPrompt,
+          schema: FollowupSchema,
+        });
+        
+        followupQuestions = object.questions;
+      } catch (error) {
+        console.warn('Failed to generate followup questions:', error);
+        followupQuestions = [];
+      }
+    }
 
     const finalResponse = {
       actions: steps,
       currentAction: 'done',
-      content: text,
+      content: text + (imageSrc ? `\n\n ![MikuOS - Generated Image](${imageSrc})` : ''),
       searchResults,
       searchImages,
-      followupQuestions: object.questions,
+      followupQuestions,
     };
 
     //console.log("[FINAL RESPONSE]", finalResponse)

@@ -1,11 +1,17 @@
+// HeroUI
 import { Button, Textarea } from '@heroui/react';
+
+// NextJS
 import { useState, useEffect } from 'react';
+
+// Icons
 import { LuSend } from 'react-icons/lu';
 import { LuSearch } from 'react-icons/lu';
 import { LuPaperclip } from 'react-icons/lu';
+import { LuImage } from 'react-icons/lu';
 
 interface ChatInputProps {
-  onSubmit: (message: string, forceWebSearch?: boolean, files?: File[]) => void;
+  onSubmit: (message: string, forceWebSearch?: boolean, files?: File[], generateImage?: boolean) => void;
   disabled?: boolean;
   messages: any[]; // Add messages prop to check if we should show suggestions
   initialValue?: string;
@@ -44,7 +50,7 @@ const SEARCH_PATTERNS = [
 
 export default function ChatInput({ onSubmit, disabled, messages = [], initialValue = '' }: ChatInputProps) {
   const [message, setMessage] = useState(initialValue);
-  const [searchEnabled, setSearchEnabled] = useState(false);
+  const [mode, setMode] = useState<'chat' | 'search' | 'image'>('chat');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   // Function to detect if message should trigger search
@@ -58,8 +64,8 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
     setMessage(newMessage);
     
     // Auto-enable search if message matches search patterns
-    if (shouldTriggerSearch(newMessage)) {
-      setSearchEnabled(true);
+    if (shouldTriggerSearch(newMessage) && mode === 'chat') {
+      setMode('search');
     }
   };
 
@@ -77,12 +83,22 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
     }
   }, [initialValue]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!message.trim() || disabled) return;
+  const handleSubmit = () => {
+    if (message.trim() || selectedFiles.length > 0) {
+      // Prepare the message based on mode
+      let processedMessage = message.trim();
+      if (mode === 'search') {
+        processedMessage = `search online for ${processedMessage}`;
+      } else if (mode === 'image') {
+        processedMessage = `generate an image of ${processedMessage}`;
+      }
 
-    onSubmit(message);
-    setMessage('');
+
+      onSubmit(processedMessage, mode === 'search', selectedFiles, mode === 'image');
+      setMessage('');
+      setSelectedFiles([]);
+      setMode('chat');
+    }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +111,11 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
   };
 
   const handleSuggestionClick = (query: string) => {
-    onSubmit(query, searchEnabled);
+    onSubmit(query, mode === 'search');
+  };
+
+  const handleModeChange = (newMode: 'chat' | 'search' | 'image') => {
+    setMode(newMode);
   };
 
   return (
@@ -119,7 +139,10 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
         </div>
       )}
       <form 
-        onSubmit={handleSubmit} 
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }} 
         className="relative"
       >
         <div className="relative flex flex-col gap-2">
@@ -140,18 +163,24 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
             </div>
           )}
           <Textarea
-            className={"bg-default-100 bg-opacity-80 backdrop-blur-sm"}
+            className={"bg-default-100 bg-opacity-90 backdrop-blur-sm"}
             variant="bordered"
             minRows={4}
             size='lg'
             value={message}
             onChange={handleMessageChange}
             disabled={disabled}
-            placeholder={searchEnabled ? "Search the web..." : "Ask me anything..."}
+            placeholder={
+              mode === 'search' 
+                ? "Search the web..." 
+                : mode === 'image' 
+                  ? "Describe the image you want to generate..." 
+                  : "Ask me anything..."
+            }
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmit(e);
+                handleSubmit();
               }
             }}
             endContent={
@@ -162,14 +191,12 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
                   className="hidden"
                   multiple
                   onChange={handleFileSelect}
-                  //disabled={disabled}
                   disabled={true}
                 />
                 <Button
                   type="button"
                   isIconOnly
                   size="md"
-                  //isDisabled={disabled}
                   isDisabled={true}
                   className={disabled ? "bg-default-800 text-white" : "bg-default-100 text-default-400"}
                   onPress={() => document.getElementById('file-upload')?.click()}
@@ -177,26 +204,47 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
                   <LuPaperclip />
                 </Button>
                 <Button
+                  type="button"
+                  isIconOnly
+                  size="md"
+                  isDisabled={disabled}
+                  className={mode === 'image' ? "bg-default-900 text-default-100" : "bg-default-100 text-default-400"}
+                  onPress={() => handleModeChange(mode === 'image' ? 'chat' : 'image')}
+                >
+                  <LuImage />
+                </Button>
+                <Button
                   type="submit"
                   isIconOnly
                   size="md"
                   isDisabled={disabled || (!message.trim() && selectedFiles.length === 0)}
-                  className={searchEnabled ? "bg-default-900 disabled:text-default-500 disabled:bg-default-200 text-default-100" : "bg-default-800 disabled:text-default-500 disabled:bg-default-200 text-default-100"}
+                  className={mode === 'search' ? "bg-default-900 disabled:text-default-500 disabled:bg-default-200 text-default-100" : "bg-default-800 disabled:text-default-500 disabled:bg-default-200 text-default-100"}
                 >
-                  {searchEnabled ? <LuSearch /> : <LuSend />}
+                  {mode === 'search' ? <LuSearch /> : <LuSend />}
                 </Button>
               </div>
             }
           />
-          <Button
-            size="sm"
-            radius="full"
-            onPress={() => setSearchEnabled(!searchEnabled)}
-            className={`absolute z-20 m-2 bottom-1 left-1 ${searchEnabled ? "bg-default-900 text-default-100" : "bg-default-50 text-default-900"}`}
-            startContent={<LuSearch size={16} />}
-          >
-            Search
-          </Button>
+          <div className="flex gap-2 absolute z-20 m-2 bottom-1 left-1">
+            <Button
+              size="sm"
+              radius="full"
+              onPress={() => handleModeChange(mode === 'search' ? 'chat' : 'search')}
+              className={`${mode === 'search' ? "bg-default-900 text-default-100" : "bg-default-50 text-default-900"}`}
+              startContent={<LuSearch size={16} />}
+            >
+              Search
+            </Button>
+            <Button
+              size="sm"
+              radius="full"
+              onPress={() => handleModeChange(mode === 'image' ? 'chat' : 'image')}
+              className={`${mode === 'image' ? "bg-default-900 text-default-100" : "bg-default-50 text-default-800"}`}
+              startContent={<LuImage size={14} className={""} />}
+            >
+              Generate Image
+            </Button>
+          </div>
         </div>
       </form>
     </div>
