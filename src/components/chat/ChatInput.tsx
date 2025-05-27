@@ -163,7 +163,7 @@ export default function ChatInput({ onSubmit, disabled, messages = [], initialVa
             </div>
           )}
           <Textarea
-            className={"bg-default-100 bg-opacity-90 backdrop-blur-sm"}
+            className={"bg-default-100 rounded-2xl bg-opacity-90 backdrop-blur-sm"}
             variant="bordered"
             minRows={4}
             size='lg'
